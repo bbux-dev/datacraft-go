@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
-	"encoding/json"
-)
 
+	"github.com/bbux-dev/datacraft-go/internal/factories"
+	"github.com/bbux-dev/datacraft-go/pkg/loader"
+	"github.com/bbux-dev/datacraft-go/pkg/registry"
+)
 
 func main() {
 	specFile := flag.String("spec", "", "Path to data spec file")
@@ -15,7 +18,7 @@ func main() {
 	// Add short versions of flags
 	flag.StringVar(specFile, "s", "", "Path to the specification file (JSON/YAML) (shorthand)")
 	flag.IntVar(iterations, "i", 1, "Number of records to generate (shorthand)")
-	
+
 	// Parse command line flags
 	flag.Parse()
 
@@ -38,20 +41,47 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Loaded spec: %v\n", spec)
-	
+	// Initialize registry and loader
+	registry := registry.NewRegistry()
+	factories.Register(registry) // Register built-in factories
+	loader := loader.NewLoader(registry, spec)
+
+	for i := range *iterations {
+		for field, fieldSpec := range spec {
+			fmt.Printf("Generating value for field '%s':\n", field)
+			fmt.Printf("Spec: %+v\n", fieldSpec)
+			var field_type, ok = fieldSpec["type"]
+			if !ok {
+				fmt.Printf("Error: Field '%s' does not have a 'type' specified in the spec.\n", field)
+				continue
+			}
+			supplier, err := loader.Get(field_type.(string))
+			if err != nil {
+				fmt.Printf("Error getting supplier for field '%s': %v\n", field, err)
+				continue
+			}
+			value, err := supplier.Next(i)
+			if err != nil {
+				fmt.Printf("Error generating value for field '%s': %v\n", field, err)
+				continue
+			}
+			fmt.Printf("Generated value for field '%s': %v\n", field, value)
+			fmt.Println()
+		}
+	}
+
 }
 
-func loadSpec(path string) (*map[string]interface{}, error) {
+func loadSpec(path string) (map[string]map[string]interface{}, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read spec file: %v", err)
 	}
 
-	var spec map[string]interface{}
+	var spec map[string]map[string]interface{}
 	if err := json.Unmarshal(content, &spec); err != nil {
 		return nil, fmt.Errorf("failed to parse spec file: %v", err)
 	}
 
-	return &spec, nil
+	return spec, nil
 }
