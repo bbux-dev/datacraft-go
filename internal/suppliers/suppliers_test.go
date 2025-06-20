@@ -1,6 +1,7 @@
 package suppliers
 
 import (
+	"math/rand/v2"
 	"testing"
 )
 
@@ -45,5 +46,31 @@ func TestRowNumberSupplier_Next(t *testing.T) {
 	}
 	if row2 != 1 {
 		t.Errorf("RowNumberSupplier.Next() = %v, want %v", row2, 1)
+	}
+}
+
+func TestIntegerSupplier_Next(t *testing.T) {
+	supplier := &IntegerSupplier{
+		Min:    1,
+		Max:    10,
+		Random: rand.New(rand.NewPCG(0, 0)), // Fixed seed for reproducibility
+	}
+
+	// Test first integer generation
+	int1, err := supplier.Next(0)
+	if err != nil {
+		t.Errorf("IntegerSupplier.Next() error = %v", err)
+	}
+	if int1.(int64) < 1 || int1.(int64) > 10 {
+		t.Errorf("IntegerSupplier.Next() = %v, want in range [1, 10]", int1)
+	}
+
+	// Test second integer generation
+	int2, err := supplier.Next(1)
+	if err != nil {
+		t.Errorf("IntegerSupplier.Next() error = %v", err)
+	}
+	if int2.(int64) < 1 || int2.(int64) > 10 {
+		t.Errorf("IntegerSupplier.Next() = %v, want in range [1, 10]", int2)
 	}
 }

@@ -1,7 +1,7 @@
 .PHONY: build clean test
 
 # Binary name
-BINARY_NAME=datacraft-go
+BINARY_NAME=dcgo
 
 # Build the application
 build:

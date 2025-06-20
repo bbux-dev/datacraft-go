@@ -42,3 +42,5 @@ gen/
 bin/
 dist/
 
+# Binary name
+dcgo*
