@@ -30,5 +30,5 @@ type IntegerSupplier struct {
 }
 
 func (s *IntegerSupplier) Next(iteration int) (any, error) {
-	return s.Random.Int64N(s.Max-s.Min) + s.Min, nil
+	return s.Random.Int64N(s.Max-s.Min+1) + s.Min, nil
 }

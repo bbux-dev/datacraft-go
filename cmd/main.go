@@ -40,22 +40,21 @@ func main() {
 		fmt.Printf("Error loading spec file: %v\n", err)
 		os.Exit(1)
 	}
+	ProcessSpec(spec, *iterations)
+}
+
+func ProcessSpec(spec map[string]map[string]interface{}, iterations int) {
 
 	// Initialize registry and loader
 	registry := registry.NewRegistry()
 	factories.Register(registry) // Register built-in factories
 	loader := loader.NewLoader(registry, spec)
 
-	for i := range *iterations {
+	for i := range iterations {
 		for field, fieldSpec := range spec {
 			fmt.Printf("Generating value for field '%s':\n", field)
 			fmt.Printf("Spec: %+v\n", fieldSpec)
-			var field_type, ok = fieldSpec["type"]
-			if !ok {
-				fmt.Printf("Error: Field '%s' does not have a 'type' specified in the spec.\n", field)
-				continue
-			}
-			supplier, err := loader.Get(field_type.(string))
+			supplier, err := loader.Get(field)
 			if err != nil {
 				fmt.Printf("Error getting supplier for field '%s': %v\n", field, err)
 				continue
